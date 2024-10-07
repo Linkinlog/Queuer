@@ -1,0 +1,36 @@
+[
+  {
+    "name": "service1",
+    "environment": "development",
+    "service": "service",
+    "queueDatabaseHost": "localhost",
+    "queueDatabasePort": "3306",
+    "queueDatabaseUser": "root",
+    "queueDatabasePassword": "test",
+    "queueDatabaseTable": "queue",
+    "queueDatabaseDriver": "mysql",
+    "targetDatabaseHost": "localhost",
+    "targetDatabasePort": "3306",
+    "targetDatabaseUser": "root",
+    "targetDatabasePassword": "test",
+    "targetDatabaseTable": "target",
+    "targetDatabaseDriver": "mysql"
+  },
+  {
+    "name": "service2",
+    "environment": "prod",
+    "service": "service2",
+    "queueDatabaseHost": "localhost",
+    "queueDatabasePort": "3306",
+    "queueDatabaseUser": "root",
+    "queueDatabasePassword": "test",
+    "queueDatabaseTable": "queue",
+    "queueDatabaseDriver": "mysql",
+    "targetDatabaseHost": "localhost",
+    "targetDatabasePort": "3306",
+    "targetDatabaseUser": "root",
+    "targetDatabasePassword": "test",
+    "targetDatabaseTable": "target",
+    "targetDatabaseDriver": "mysql"
+  }
+]
