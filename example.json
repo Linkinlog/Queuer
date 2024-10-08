@@ -2,7 +2,7 @@
   {
     "name": "service1",
     "environment": "development",
-    "service": "service",
+    "service": "example",
     "queueDatabaseHost": "localhost",
     "queueDatabasePort": "3306",
     "queueDatabaseUser": "root",
@@ -19,7 +19,7 @@
   {
     "name": "service2",
     "environment": "prod",
-    "service": "service2",
+    "service": "example2",
     "queueDatabaseHost": "localhost",
     "queueDatabasePort": "3306",
     "queueDatabaseUser": "root",
