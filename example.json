@@ -2,7 +2,8 @@
   {
     "name": "service1",
     "environment": "development",
-    "service": "example",
+    "service": "adder",
+    "timeout": 1000,
     "queueDatabaseHost": "localhost",
     "queueDatabasePort": "3306",
     "queueDatabaseUser": "root",
@@ -19,7 +20,8 @@
   {
     "name": "service2",
     "environment": "prod",
-    "service": "example2",
+    "service": "squarer",
+    "timeout": 1000,
     "queueDatabaseHost": "localhost",
     "queueDatabasePort": "3306",
     "queueDatabaseUser": "root",
