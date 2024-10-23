@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/linkinlog/queuer/internal/config"
@@ -14,7 +15,7 @@ import (
 type Service interface {
 	json.Unmarshaler
 	fmt.Stringer
-	Run(ctx context.Context) (result []byte, err error)
+	Run() (results chan []byte, errs chan error)
 }
 
 func Start(logger *slog.Logger, configPath string) {
@@ -24,42 +25,49 @@ func Start(logger *slog.Logger, configPath string) {
 		return
 	}
 
+	var wg sync.WaitGroup
 	for _, queue := range cfg.Queues {
-		// todo handle context timeout and cancel
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(queue.Timeout) * time.Millisecond)
-		defer cancel()
-
-		if err := process(queue, logger, ctx); err != nil {
-			logger.Error("failed to process queue", "queue", queue.Name, "error", err)
-		}
-
-		if ctx.Done() != nil {
-			fmt.Println("TODO")
-			logger.Error("queue processing timeout", "queue", queue.Name)
-		}
+		wg.Add(1)
+		go processQueue(logger, queue, &wg)
 	}
+
+	wg.Wait()
 }
 
-func process(queue *config.Queue, logger *slog.Logger, ctx context.Context) error {
+func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) {
+	defer wg.Done()
 	logger.Info("fetching queue data", "queue", queue.Name)
+
 	// todo fetch from databases
 	srv := ToService(queue.Service)
 	if srv == nil {
-		return fmt.Errorf("unknown service: %s", queue.Service)
+		logger.Error("unknown service", "service", queue.Service)
+		return
 	}
-	logger.Info("processing queue", "queue", queue.Name)
+	logger.Info("processing queue entry", "queue", queue.Name, "timeout", queue.Timeout, "service", srv.String())
 
-	// todo get data from queue, marshal to service unmarhsaler, run service
-
-	result, err := srv.Run(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to process queue: %w", err)
+	if res, err := processItem(srv, queue.Timeout); err != nil {
+		logger.Error("failed to process service", "service", srv.String(), "error", err)
+	} else if res != nil {
+		logger.Info("service processed", "service", srv.String(), "result", string(res))
 	}
 
-	logger.Info("queue processed", "queue", queue.Name, "result", string(result))
 	// todo write to databases
+}
 
-	return nil
+func processItem(srv Service, timeout int) (result []byte, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
+	defer cancel()
+
+	resChan, errChan := srv.Run()
+	select {
+	case res := <-resChan:
+		return res, nil
+	case err := <-errChan:
+		return nil, fmt.Errorf("service failed: %w", err)
+	case <-ctx.Done():
+		return nil, fmt.Errorf("service timed out")
+	}
 }
 
 func ToService(s string) Service {
@@ -68,6 +76,8 @@ func ToService(s string) Service {
 		return services.NewSquarer()
 	case "adder":
 		return services.NewAdder()
+	case "longrunner":
+		return services.NewLongRunner()
 	default:
 		return nil
 	}

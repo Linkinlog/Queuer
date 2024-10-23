@@ -1,12 +1,13 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
 )
 
 func NewAdder() *Adder {
-	return &Adder{}
+	return &Adder{
+		Addends: []int{1, 3}, // TODO remove this once we are feeding from DB
+	}
 }
 
 type Adder struct {
@@ -29,12 +30,24 @@ func (a *Adder) String() string {
 	return "adder"
 }
 
-func (a *Adder) Run(ctx context.Context) (result []byte, err error) {
-	sum := 0
+func (a *Adder) Run() (chan []byte, chan error) {
+	results := make(chan []byte)
+	errs := make(chan error)
+	go func() {
+		sum := 0
 
-	for _, addend := range a.Addends {
-		sum += addend
-	}
+		for _, addend := range a.Addends {
+			sum += addend
+		}
 
-	return json.Marshal(sum)
+		result, err := json.Marshal(sum)
+		if err != nil {
+			errs <- err
+			return
+		}
+
+		results <- result
+	}()
+
+	return results, errs
 }

@@ -1,13 +1,15 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
-	"strconv"
 )
 
 func NewSquarer() *Squarer {
-	return &Squarer{}
+	return &Squarer{
+		// TODO remove this once we are feeding from DB
+		Factor: 2,
+		Base:   3,
+	}
 }
 
 type Squarer struct {
@@ -32,10 +34,21 @@ func (s *Squarer) String() string {
 	return "squarer"
 }
 
-func (s *Squarer) Run(ctx context.Context) (result []byte, err error) {
-	resInt := s.Factor * s.Base
-	resStr := strconv.Itoa(resInt)
-	res := []byte(resStr)
+func (s *Squarer) Run() (chan []byte, chan error) {
+	results := make(chan []byte)
+	errs := make(chan error)
 
-	return res, nil
+	go func() {
+		res := s.Factor * s.Base
+
+		result, err := json.Marshal(res)
+		if err != nil {
+			errs <- err
+			return
+		}
+
+		results <- result
+	}()
+
+	return results, errs
 }
