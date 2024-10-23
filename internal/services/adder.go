@@ -2,12 +2,11 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 func NewAdder() *Adder {
-	return &Adder{
-		Addends: []int{1, 3}, // TODO remove this once we are feeding from DB
-	}
+	return &Adder{}
 }
 
 type Adder struct {
@@ -15,13 +14,20 @@ type Adder struct {
 }
 
 func (a *Adder) UnmarshalJSON(data []byte) error {
-	temp := &Adder{}
+	temp := struct {
+		Addends []*int `json:"addends"`
+	}{}
 
-	if err := json.Unmarshal(data, &temp.Addends); err != nil {
+	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
 
-	a.Addends = temp.Addends
+	for _, addend := range temp.Addends {
+		if addend == nil {
+			return errors.New("addend is required")
+		}
+		a.Addends = append(a.Addends, *addend)
+	}
 
 	return nil
 }

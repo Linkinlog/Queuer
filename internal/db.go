@@ -1,22 +1,23 @@
 package internal
 
 type dbParams struct {
-	driver string
-	dsn    string
+	dsn string
 }
 
 type QueueEvent struct {
-	sequence int
-	payload  interface{}
+	EventID   int
+	Data      string
+	Resource  string
+	Processed bool
 }
 
 type QueueReader interface {
-	Read() (*QueueEvent, error)
+	Read(resource string) ([]*QueueEvent, error)
+	MarkProcessed(eventID int) error
 }
 
-
 func OpenQueue(d *dbParams) (QueueReader, error) {
-	return nil, nil
+	return NewPsqlConnector(d.dsn)
 }
 
 type TargetWriter interface {

@@ -1,0 +1,71 @@
+services:
+  queue:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    user: postgres
+    ports:
+      - "5430:5432"
+    environment:
+      POSTGRES_DB: queue
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - queue-data:/var/lib/postgresql/data
+      - ./build/queue:/docker-entrypoint-initdb.d
+    networks:
+      - queuer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+  transaction:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    user: postgres
+    ports:
+      - "5431:5432"
+    environment:
+      POSTGRES_DB: transactions
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - transaction-data:/var/lib/postgresql/data
+      - ./build/transaction:/docker-entrypoint-initdb.d
+    networks:
+      - queuer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+  logs:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    user: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: logs
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - logs-data:/var/lib/postgresql/data
+      - ./build/logs:/docker-entrypoint-initdb.d
+    networks:
+      - queuer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+volumes:
+  queue-data:
+  transaction-data:
+  logs-data:
+networks:
+  queuer:
+    driver: bridge

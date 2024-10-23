@@ -2,14 +2,11 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 func NewSquarer() *Squarer {
-	return &Squarer{
-		// TODO remove this once we are feeding from DB
-		Factor: 2,
-		Base:   3,
-	}
+	return &Squarer{}
 }
 
 type Squarer struct {
@@ -18,14 +15,24 @@ type Squarer struct {
 }
 
 func (s *Squarer) UnmarshalJSON(data []byte) error {
-	temp := &Squarer{}
+	temp := struct {
+		Factor *int `json:"factor"`
+		Base   *int `json:"base"`
+	}{}
 
-	if err := json.Unmarshal(data, temp); err != nil {
+	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
 
-	s.Factor = temp.Factor
-	s.Base = temp.Base
+	if temp.Factor == nil {
+		return errors.New("factor is required")
+	}
+	if temp.Base == nil {
+		return errors.New("base is required")
+	}
+
+	s.Factor = *temp.Factor
+	s.Base = *temp.Base
 
 	return nil
 }

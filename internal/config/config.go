@@ -19,15 +19,13 @@ type Queue struct {
 	QueueDatabasePort     string `json:"queueDatabasePort"`
 	QueueDatabaseUser     string `json:"queueDatabaseUser"`
 	QueueDatabasePassword string `json:"queueDatabasePassword"`
-	QueueDatabaseTable    string `json:"queueDatabaseTable"`
-	QueueDatabaseDriver   string `json:"queueDatabaseDriver"`
+	QueueDatabaseName     string `json:"queueDatabaseName"`
 
 	TargetDatabaseHost     string `json:"targetDatabaseHost"`
 	TargetDatabasePort     string `json:"targetDatabasePort"`
 	TargetDatabaseUser     string `json:"targetDatabaseUser"`
 	TargetDatabasePassword string `json:"targetDatabasePassword"`
-	TargetDatabaseTable    string `json:"targetDatabaseTable"`
-	TargetDatabaseDriver   string `json:"targetDatabaseDriver"`
+	TargetDatabaseName     string `json:"targetDatabaseName"`
 }
 
 func ParseConfig(filename string) (*Config, error) {

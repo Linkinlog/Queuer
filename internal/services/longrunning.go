@@ -2,13 +2,12 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 )
 
 func NewLongRunner() *LongRunner {
-	return &LongRunner{
-		TimeToRun: 5000, // TODO remove this once we are feeding from DB
-	}
+	return &LongRunner{}
 }
 
 type LongRunner struct {
@@ -16,11 +15,18 @@ type LongRunner struct {
 }
 
 func (lr *LongRunner) UnmarshalJSON(data []byte) error {
-	temp := &LongRunner{}
-
-	if err := json.Unmarshal(data, temp); err != nil {
+	temp := struct {
+		TimeToRun *int `json:"time_to_run"`
+	}{}
+	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
+
+	if temp.TimeToRun == nil {
+		return errors.New("time_to_run is required")
+	}
+
+	lr.TimeToRun = *temp.TimeToRun
 
 	return nil
 }

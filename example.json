@@ -1,38 +1,56 @@
 [
   {
-    "name": "service1",
+    "name": "Addition Service",
     "environment": "development",
     "service": "adder",
     "timeout": 1000,
+
     "queueDatabaseHost": "localhost",
-    "queueDatabasePort": "3306",
-    "queueDatabaseUser": "root",
-    "queueDatabasePassword": "test",
-    "queueDatabaseTable": "queue",
-    "queueDatabaseDriver": "mysql",
+    "queueDatabasePort": "5430",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
     "targetDatabaseHost": "localhost",
-    "targetDatabasePort": "3306",
-    "targetDatabaseUser": "root",
-    "targetDatabasePassword": "test",
-    "targetDatabaseTable": "target",
-    "targetDatabaseDriver": "mysql"
+    "targetDatabasePort": "5431",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target"
   },
   {
-    "name": "service2",
+    "name": "Square Service",
     "environment": "prod",
     "service": "squarer",
     "timeout": 1000,
+
     "queueDatabaseHost": "localhost",
-    "queueDatabasePort": "3306",
-    "queueDatabaseUser": "root",
-    "queueDatabasePassword": "test",
-    "queueDatabaseTable": "queue",
-    "queueDatabaseDriver": "mysql",
+    "queueDatabasePort": "5430",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
     "targetDatabaseHost": "localhost",
-    "targetDatabasePort": "3306",
-    "targetDatabaseUser": "root",
-    "targetDatabasePassword": "test",
-    "targetDatabaseTable": "target",
-    "targetDatabaseDriver": "mysql"
+    "targetDatabasePort": "5431",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target"
+  },
+  {
+    "name": "Long Running Service",
+    "environment": "prod",
+    "service": "longrunner",
+    "timeout": 1000,
+
+    "queueDatabaseHost": "localhost",
+    "queueDatabasePort": "5430",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
+    "targetDatabaseHost": "localhost",
+    "targetDatabasePort": "5431",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target"
   }
 ]

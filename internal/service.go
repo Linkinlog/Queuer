@@ -38,18 +38,63 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 	defer wg.Done()
 	logger.Info("fetching queue data", "queue", queue.Name)
 
-	// todo fetch from databases
-	srv := ToService(queue.Service)
-	if srv == nil {
-		logger.Error("unknown service", "service", queue.Service)
+	params := &dbParams{
+		dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+			queue.QueueDatabaseUser,
+			queue.QueueDatabasePassword,
+			queue.QueueDatabaseHost,
+			queue.QueueDatabasePort,
+			queue.QueueDatabaseName,
+		),
+	}
+
+	queueReader, err := OpenQueue(params)
+	if err != nil {
+		logger.Error("failed to open queue", "error", err)
 		return
 	}
-	logger.Info("processing queue entry", "queue", queue.Name, "timeout", queue.Timeout, "service", srv.String())
 
-	if res, err := processItem(srv, queue.Timeout); err != nil {
-		logger.Error("failed to process service", "service", srv.String(), "error", err)
-	} else if res != nil {
+	events, err := queueReader.Read(queue.Service)
+	if err != nil {
+		logger.Error("failed to read queue", "error", err)
+		return
+	}
+
+	if len(events) == 0 {
+		logger.Info("no events to process", "queue", queue.Name)
+		return
+	}
+
+	for _, event := range events {
+		srv := ToService(queue.Service)
+		if srv == nil {
+			logger.Error("unknown service", "service", queue.Service)
+			return
+		}
+
+		logger.Info("processing queue entry", "queue", queue.Name, "timeout", queue.Timeout, "service", srv.String(), "data", event.Data)
+
+		if err := srv.UnmarshalJSON([]byte(event.Data)); err != nil {
+			logger.Error("failed to unmarshal data", "data", event.Data, "error", err)
+			continue
+		}
+
+		res, err := processItem(srv, queue.Timeout)
+		if err != nil {
+			logger.Error("failed to process service", "name", queue.Name, "service", srv.String(), "error", err)
+			continue
+		}
+		if res == nil {
+			logger.Error("service returned nil result", "service", srv.String())
+			continue
+		}
+
 		logger.Info("service processed", "service", srv.String(), "result", string(res))
+
+		if err := queueReader.MarkProcessed(event.EventID); err != nil {
+			logger.Error("failed to mark event as processed", "eventID", event.EventID, "error", err)
+			continue
+		}
 	}
 
 	// todo write to databases
