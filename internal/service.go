@@ -54,6 +54,8 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 		return
 	}
 
+	defer queueReader.Close()
+
 	events, err := queueReader.Read(queue.Service)
 	if err != nil {
 		logger.Error("failed to read queue", "error", err)
@@ -92,16 +94,40 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 
 			logger.Info("service processed", "service", srv.String(), "result", string(res))
 
+			params := &dbParams{
+				dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+					queue.TargetDatabaseUser,
+					queue.TargetDatabasePassword,
+					queue.TargetDatabaseHost,
+					queue.TargetDatabasePort,
+					queue.TargetDatabaseName,
+				),
+			}
+
+			targetWriter, err := OpenTarget(params)
+			if err != nil {
+				logger.Error("failed to open target", "error", err)
+				continue
+			}
+			defer targetWriter.Close()
+
+			if err := targetWriter.Write(event.EventID, res); err != nil {
+				logger.Error("failed to write to target", "error", err)
+				continue
+			}
+
 			if err := queueReader.MarkProcessed(event.EventID); err != nil {
 				logger.Error("failed to mark event as processed", "eventID", event.EventID, "error", err)
 				continue
 			}
 
+			if i > 0 {
+				logger.Info("service processed after retries", "service", srv.String(), "retries", i)
+			}
+
 			break
 		}
 	}
-
-	// todo write to databases
 }
 
 func processItem(srv Service, timeout int) (result []byte, err error) {

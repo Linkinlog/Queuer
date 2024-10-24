@@ -57,3 +57,14 @@ func (q *psqlConnector) MarkProcessed(eventID int) error {
 	_, err := q.conn.Exec(context.Background(), markProcessedQuery, eventID)
 	return err
 }
+
+func (q *psqlConnector) Close() error {
+	return q.conn.Close(context.Background())
+}
+
+const writeQuery = `INSERT INTO transactions (event_id, result) VALUES ($1, $2);`
+
+func (q *psqlConnector) Write(eventId int, data interface{}) error {
+	_, err := q.conn.Exec(context.Background(), writeQuery, eventId, data)
+	return err
+}

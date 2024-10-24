@@ -28,7 +28,7 @@ services:
     ports:
       - "5431:5432"
     environment:
-      POSTGRES_DB: transactions
+      POSTGRES_DB: target
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:

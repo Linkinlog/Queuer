@@ -7,18 +7,18 @@ VALUES
 INSERT INTO
   events (resource_id, data)
 VALUES
-  (1, '{"field": [1, 2, 3]}');
+  (1, '{"addends": [1, 2, 3]}');
 
 -- Squarer
 INSERT INTO
   resources (name, version, schema)
 VALUES
-  ('squarer', '1', '{"field": "array"}');
+  ('squarer', '1', '{"field": "object"}');
 
 INSERT INTO
 	events (resource_id, data)
 VALUES
-	(2, '{"field": [4, 5, 6]}');
+	(2, '{"factor": 2, "base": 4}');
 
 -- Longrunner
 INSERT INTO
@@ -29,4 +29,4 @@ VALUES
 INSERT INTO
   events (resource_id, data)
 VALUES
-  (3, '{"field": 5000}');
+  (3, '{"time_to_run": 500}');

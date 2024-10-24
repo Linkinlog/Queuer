@@ -14,6 +14,7 @@ type QueueEvent struct {
 type QueueReader interface {
 	Read(resource string) ([]*QueueEvent, error)
 	MarkProcessed(eventID int) error
+	Close() error
 }
 
 func OpenQueue(d *dbParams) (QueueReader, error) {
@@ -21,9 +22,10 @@ func OpenQueue(d *dbParams) (QueueReader, error) {
 }
 
 type TargetWriter interface {
-	Write(interface{}) error
+	Write(eventId int, data interface{}) error
+	Close() error
 }
 
 func OpenTarget(d *dbParams) (TargetWriter, error) {
-	return nil, nil
+	return NewPsqlConnector(d.dsn)
 }
