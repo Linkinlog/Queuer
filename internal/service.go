@@ -79,21 +79,25 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 			continue
 		}
 
-		res, err := processItem(srv, queue.Timeout)
-		if err != nil {
-			logger.Error("failed to process service", "name", queue.Name, "service", srv.String(), "error", err)
-			continue
-		}
-		if res == nil {
-			logger.Error("service returned nil result", "service", srv.String())
-			continue
-		}
+		for i := 0; i <= queue.Retries; i++ {
+			res, err := processItem(srv, queue.Timeout)
+			if err != nil {
+				logger.Error("failed to process service", "name", queue.Name, "service", srv.String(), "error", err)
+				continue
+			}
+			if res == nil {
+				logger.Error("service returned nil result", "service", srv.String())
+				continue
+			}
 
-		logger.Info("service processed", "service", srv.String(), "result", string(res))
+			logger.Info("service processed", "service", srv.String(), "result", string(res))
 
-		if err := queueReader.MarkProcessed(event.EventID); err != nil {
-			logger.Error("failed to mark event as processed", "eventID", event.EventID, "error", err)
-			continue
+			if err := queueReader.MarkProcessed(event.EventID); err != nil {
+				logger.Error("failed to mark event as processed", "eventID", event.EventID, "error", err)
+				continue
+			}
+
+			break
 		}
 	}
 

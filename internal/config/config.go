@@ -14,6 +14,7 @@ type Queue struct {
 	Environment string `json:"environment"`
 	Service     string `json:"service"`
 	Timeout     int    `json:"timeout"`
+	Retries     int    `json:"retries"`
 
 	QueueDatabaseHost     string `json:"queueDatabaseHost"`
 	QueueDatabasePort     string `json:"queueDatabasePort"`

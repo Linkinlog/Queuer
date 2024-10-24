@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var timesRan = 0
+
 func NewLongRunner() *LongRunner {
 	return &LongRunner{}
 }
@@ -38,8 +40,16 @@ func (lr *LongRunner) String() string {
 func (lr *LongRunner) Run() (chan []byte, chan error) {
 	results := make(chan []byte)
 	errs := make(chan error)
+
+	// we do this so we can simulate a service which requires a single retry
+	tempTTR := lr.TimeToRun
+	if timesRan < 1 {
+		tempTTR = lr.TimeToRun * 20
+	}
+	timesRan++
+
 	go func() {
-		<-time.After(time.Duration(lr.TimeToRun) * time.Millisecond)
+		<-time.After(time.Duration(tempTTR) * time.Millisecond)
 		result, err := json.Marshal("longrunner done")
 		if err != nil {
 			errs <- err
