@@ -27,6 +27,12 @@ type Queue struct {
 	TargetDatabaseUser     string `json:"targetDatabaseUser"`
 	TargetDatabasePassword string `json:"targetDatabasePassword"`
 	TargetDatabaseName     string `json:"targetDatabaseName"`
+
+	LogDatabaseHost     string `json:"logDatabaseHost"`
+	LogDatabasePort     string `json:"logDatabasePort"`
+	LogDatabaseUser     string `json:"logDatabaseUser"`
+	LogDatabasePassword string `json:"logDatabasePassword"`
+	LogDatabaseName     string `json:"logDatabaseName"`
 }
 
 func ParseConfig(filename string) (*Config, error) {

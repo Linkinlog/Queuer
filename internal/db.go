@@ -22,10 +22,19 @@ func OpenQueue(d *dbParams) (QueueReader, error) {
 }
 
 type TargetWriter interface {
-	Write(eventId int, data interface{}) error
+	Write(eventId int, data []byte) error
 	Close() error
 }
 
 func OpenTarget(d *dbParams) (TargetWriter, error) {
+	return NewPsqlConnector(d.dsn)
+}
+
+type LogWriter interface {
+	WriteLog(data []byte) error
+	Close() error
+}
+
+func OpenLog(d *dbParams) (LogWriter, error) {
 	return NewPsqlConnector(d.dsn)
 }

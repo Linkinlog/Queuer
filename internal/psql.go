@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -64,7 +65,18 @@ func (q *psqlConnector) Close() error {
 
 const writeQuery = `INSERT INTO transactions (event_id, result) VALUES ($1, $2);`
 
-func (q *psqlConnector) Write(eventId int, data interface{}) error {
+func (q *psqlConnector) Write(eventId int, data []byte) error {
 	_, err := q.conn.Exec(context.Background(), writeQuery, eventId, data)
+	return err
+}
+
+const logQuery = `INSERT INTO logs (data) VALUES ($1);`
+
+func (q *psqlConnector) WriteLog(data []byte) error {
+	var js json.RawMessage
+	if err := json.Unmarshal(data, &js); err != nil {
+		data, _ = json.Marshal(string(data))
+	}
+	_, err := q.conn.Exec(context.Background(), logQuery, string(data))
 	return err
 }

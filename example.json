@@ -16,7 +16,13 @@
     "targetDatabasePort": "5431",
     "targetDatabaseUser": "postgres",
     "targetDatabasePassword": "postgres",
-    "targetDatabaseName": "target"
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "localhost",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
   },
   {
     "name": "Square Service",
@@ -35,7 +41,13 @@
     "targetDatabasePort": "5431",
     "targetDatabaseUser": "postgres",
     "targetDatabasePassword": "postgres",
-    "targetDatabaseName": "target"
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "localhost",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
   },
   {
     "name": "Long Running Service",
@@ -54,6 +66,12 @@
     "targetDatabasePort": "5431",
     "targetDatabaseUser": "postgres",
     "targetDatabasePassword": "postgres",
-    "targetDatabaseName": "target"
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "localhost",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
   }
 ]
