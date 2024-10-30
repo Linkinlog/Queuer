@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Addition Service",
+    "environment": "development",
+    "service": "adder",
+    "timeout": 1000,
+    "retries": 3,
+
+    "queueDatabaseHost": "queue",
+    "queueDatabasePort": "5432",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
+    "targetDatabaseHost": "transaction",
+    "targetDatabasePort": "5432",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "logs",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
+  },
+  {
+    "name": "Square Service",
+    "environment": "prod",
+    "service": "squarer",
+    "timeout": 1000,
+    "retries": 3,
+
+    "queueDatabaseHost": "queue",
+    "queueDatabasePort": "5432",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
+    "targetDatabaseHost": "transaction",
+    "targetDatabasePort": "5432",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "logs",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
+  },
+  {
+    "name": "Long Running Service",
+    "environment": "prod",
+    "service": "longrunner",
+    "timeout": 1000,
+    "retries": 1,
+
+    "queueDatabaseHost": "queue",
+    "queueDatabasePort": "5432",
+    "queueDatabaseUser": "postgres",
+    "queueDatabasePassword": "postgres",
+    "queueDatabaseName": "queue",
+
+    "targetDatabaseHost": "transaction",
+    "targetDatabasePort": "5432",
+    "targetDatabaseUser": "postgres",
+    "targetDatabasePassword": "postgres",
+    "targetDatabaseName": "target",
+
+    "logDatabaseHost": "logs",
+    "logDatabasePort": "5432",
+    "logDatabaseUser": "postgres",
+    "logDatabasePassword": "postgres",
+    "logDatabaseName": "logs"
+  }
+]

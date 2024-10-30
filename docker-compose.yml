@@ -62,6 +62,15 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
+  queuer:
+    image: ghcr.io/linkinlog/queuer:latest
+    restart: always
+    networks:
+      - queuer
+    depends_on:
+      - queue
+      - transaction
+      - logs
 volumes:
   queue-data:
   transaction-data:
