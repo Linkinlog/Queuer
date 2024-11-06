@@ -34,6 +34,21 @@ func Start(logger *slog.Logger, configPath string) {
 	wg.Wait()
 }
 
+func ToService(s string) Service {
+	switch s {
+	case "squarer":
+		return services.NewSquarer()
+	case "adder":
+		return services.NewAdder()
+	case "longrunner":
+		return services.NewLongRunner()
+	default:
+		return nil
+	}
+}
+
+// Program internals beyond here, no touchy
+
 func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -186,18 +201,5 @@ func processItem(srv Service, timeout int) (result []byte, err error) {
 		return nil, fmt.Errorf("service failed: %w", err)
 	case <-ctx.Done():
 		return nil, fmt.Errorf("service timed out")
-	}
-}
-
-func ToService(s string) Service {
-	switch s {
-	case "squarer":
-		return services.NewSquarer()
-	case "adder":
-		return services.NewAdder()
-	case "longrunner":
-		return services.NewLongRunner()
-	default:
-		return nil
 	}
 }
