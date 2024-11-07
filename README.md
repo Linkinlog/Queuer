@@ -45,6 +45,11 @@ queuer -f custom_config.json -vv
 
 Queuer uses a JSON configuration file to define each queue’s service, environment, and database connections. Each task is matched to a service specified in this file and processed accordingly. Below is an example configuration.
 
+### Environment Configuration
+
+Database connection parameters for each service should be set via environment variables. Only PostgreSQL is currently supported.
+Please reference the `.sample.env` file for the required environment variables.
+
 ### Example `config.json`
 
 ```json
@@ -109,10 +114,6 @@ Queuer provides flexible logging options with adjustable verbosity:
 - `-v`: Logs warnings and informational messages.
 - `-vv`: Adds debug messages.
 - `-vvv`: Adds full path details for deep diagnostics.
-
-### Environment Configuration
-
-Database connection parameters for each service should be set via environment variables. Only PostgreSQL is currently supported.
 
 ## Limitations
 
