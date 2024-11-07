@@ -28,7 +28,7 @@ func Start(logger *slog.Logger, configPath string) {
 	var wg sync.WaitGroup
 	for _, queue := range cfg.Queues {
 		wg.Add(1)
-		go processQueue(logger, queue, &wg)
+		go processQueue(logger, queue, cfg.Creds, &wg)
 	}
 
 	wg.Wait()
@@ -49,13 +49,13 @@ func ToService(s string) Service {
 
 // Program internals beyond here, no touchy
 
-func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) {
+func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Credentials, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	loggerParams := &dbParams{
 		dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-			queue.LogDatabaseUser,
-			queue.LogDatabasePassword,
+			creds.LogDatabaseUser,
+			creds.LogDatabasePassword,
 			queue.LogDatabaseHost,
 			queue.LogDatabasePort,
 			queue.LogDatabaseName,
@@ -72,8 +72,8 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 
 	queueParams := &dbParams{
 		dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-			queue.QueueDatabaseUser,
-			queue.QueueDatabasePassword,
+			creds.QueueDatabaseUser,
+			creds.QueueDatabasePassword,
 			queue.QueueDatabaseHost,
 			queue.QueueDatabasePort,
 			queue.QueueDatabaseName,
@@ -146,8 +146,8 @@ func processQueue(logger *slog.Logger, queue *config.Queue, wg *sync.WaitGroup) 
 
 			params := &dbParams{
 				dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-					queue.TargetDatabaseUser,
-					queue.TargetDatabasePassword,
+					creds.TargetDatabaseUser,
+					creds.TargetDatabasePassword,
 					queue.TargetDatabaseHost,
 					queue.TargetDatabasePort,
 					queue.TargetDatabaseName,

@@ -8,8 +8,8 @@ services:
       - "5430:5432"
     environment:
       POSTGRES_DB: queue
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${QUEUE_DATABASE_USER}
+      POSTGRES_PASSWORD: ${QUEUE_DATABASE_PASSWORD}
     volumes:
       - queue-data:/var/lib/postgresql/data
       - ./build/queue:/docker-entrypoint-initdb.d
@@ -29,8 +29,8 @@ services:
       - "5431:5432"
     environment:
       POSTGRES_DB: target
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${TARGET_DATABASE_USER}
+      POSTGRES_PASSWORD: ${TARGET_DATABASE_PASSWORD}
     volumes:
       - transaction-data:/var/lib/postgresql/data
       - ./build/transaction:/docker-entrypoint-initdb.d
@@ -50,8 +50,8 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: logs
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${LOG_DATABASE_USER}
+      POSTGRES_PASSWORD: ${LOG_DATABASE_PASSWORD}
     volumes:
       - logs-data:/var/lib/postgresql/data
       - ./build/logs:/docker-entrypoint-initdb.d
