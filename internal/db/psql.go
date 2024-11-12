@@ -1,9 +1,8 @@
-package internal
+package db
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -19,7 +18,7 @@ func NewPsqlConnector(dsn string) (*psqlConnector, error) {
 
 	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
-		return nil, errors.New("failed to connect to database")
+		return nil, err
 	}
 	return &psqlConnector{conn: conn}, nil
 }

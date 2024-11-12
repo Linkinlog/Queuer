@@ -65,6 +65,13 @@ services:
   queuer:
     image: ghcr.io/linkinlog/queuer:latest
     restart: always
+    environment:
+      QUEUE_DATABASE_USER: ${QUEUE_DATABASE_USER}
+      QUEUE_DATABASE_PASSWORD: ${QUEUE_DATABASE_PASSWORD}
+      TARGET_DATABASE_USER: ${TARGET_DATABASE_USER}
+      TARGET_DATABASE_PASSWORD: ${TARGET_DATABASE_PASSWORD}
+      LOG_DATABASE_USER: ${LOG_DATABASE_USER}
+      LOG_DATABASE_PASSWORD: ${LOG_DATABASE_PASSWORD}
     networks:
       - queuer
     depends_on:

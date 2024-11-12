@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/linkinlog/queuer/internal/config"
+	"github.com/linkinlog/queuer/internal/db"
+	"github.com/linkinlog/queuer/internal/logger"
 	"github.com/linkinlog/queuer/internal/services"
 )
 
@@ -18,17 +21,11 @@ type Service interface {
 	Run() (results chan []byte, errs chan error)
 }
 
-func Start(logger *slog.Logger, configPath string) {
-	cfg, err := config.ParseConfig(configPath)
-	if err != nil {
-		logger.Error("failed to parse config", "error", err)
-		return
-	}
-
+func Start(cfg *config.Config) {
 	var wg sync.WaitGroup
 	for _, queue := range cfg.Queues {
 		wg.Add(1)
-		go processQueue(logger, queue, cfg.Creds, &wg)
+		go processQueue(queue, cfg.Creds, cfg.SlogOpts, &wg)
 	}
 
 	wg.Wait()
@@ -49,42 +46,38 @@ func ToService(s string) Service {
 
 // Program internals beyond here, no touchy
 
-func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Credentials, wg *sync.WaitGroup) {
+func processQueue(queue *config.Queue, creds *config.Credentials, s *slog.HandlerOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	loggerParams := &dbParams{
-		dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-			creds.LogDatabaseUser,
-			creds.LogDatabasePassword,
-			queue.LogDatabaseHost,
-			queue.LogDatabasePort,
-			queue.LogDatabaseName,
-		),
+	loggerDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+		creds.LogDatabaseUser,
+		creds.LogDatabasePassword,
+		queue.LogDatabaseHost,
+		queue.LogDatabasePort,
+		queue.LogDatabaseName,
+	)
+
+	loggerParams := &logger.LoggerParams{
+		W:   os.Stdout,
+		DSN: loggerDSN,
 	}
 
-	logWriter, err := OpenLog(loggerParams)
-	if err != nil {
-		logger.Error("failed to open log", "error", err)
-		return
-	}
+	logWriter := logger.New(loggerParams)
+
+	logger := slog.New(slog.NewJSONHandler(logWriter, s))
 
 	logger.Info("fetching queue data", "queue", queue.Name)
 
-	queueParams := &dbParams{
-		dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-			creds.QueueDatabaseUser,
-			creds.QueueDatabasePassword,
-			queue.QueueDatabaseHost,
-			queue.QueueDatabasePort,
-			queue.QueueDatabaseName,
-		),
-	}
+	queueDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+		creds.QueueDatabaseUser,
+		creds.QueueDatabasePassword,
+		queue.QueueDatabaseHost,
+		queue.QueueDatabasePort,
+		queue.QueueDatabaseName,
+	)
 
-	queueReader, err := OpenQueue(queueParams)
+	queueReader, err := db.OpenQueue(queueDSN)
 	if err != nil {
-		if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to open queue: %v", err))); err != nil {
-			logger.Error("failed to write to log", "error", err)
-		}
 		logger.Error("failed to open queue", "error", err)
 		return
 	}
@@ -93,9 +86,6 @@ func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Creden
 
 	events, err := queueReader.Read(queue.Service)
 	if err != nil {
-		if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to read queue: %v", err))); err != nil {
-			logger.Error("failed to write to log", "error", err)
-		}
 		logger.Error("failed to read queue", "error", err)
 		return
 	}
@@ -108,9 +98,6 @@ func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Creden
 	for _, event := range events {
 		srv := ToService(queue.Service)
 		if srv == nil {
-			if err := logWriter.WriteLog([]byte(fmt.Sprintf("unknown service: %s", queue.Service))); err != nil {
-				logger.Error("failed to write to log", "error", err)
-			}
 			logger.Error("unknown service", "service", queue.Service)
 			return
 		}
@@ -118,9 +105,6 @@ func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Creden
 		logger.Info("processing queue entry", "queue", queue.Name, "timeout", queue.Timeout, "service", srv.String(), "data", event.Data)
 
 		if err := srv.UnmarshalJSON([]byte(event.Data)); err != nil {
-			if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to unmarshal data: %v", err))); err != nil {
-				logger.Error("failed to write to log", "error", err)
-			}
 			logger.Error("failed to unmarshal data", "data", event.Data, "error", err)
 			continue
 		}
@@ -128,54 +112,37 @@ func processQueue(logger *slog.Logger, queue *config.Queue, creds *config.Creden
 		for i := 0; i <= queue.Retries; i++ {
 			res, err := processItem(srv, queue.Timeout)
 			if err != nil {
-				if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to process service: %v", err))); err != nil {
-					logger.Error("failed to write to log", "error", err)
-				}
 				logger.Error("failed to process service", "name", queue.Name, "service", srv.String(), "error", err)
 				continue
 			}
 			if res == nil {
-				if err := logWriter.WriteLog([]byte("service returned nil result")); err != nil {
-					logger.Error("failed to write to log", "error", err)
-				}
 				logger.Error("service returned nil result", "service", srv.String())
 				continue
 			}
 
 			logger.Info("service processed", "service", srv.String(), "result", string(res))
 
-			params := &dbParams{
-				dsn: fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-					creds.TargetDatabaseUser,
-					creds.TargetDatabasePassword,
-					queue.TargetDatabaseHost,
-					queue.TargetDatabasePort,
-					queue.TargetDatabaseName,
-				),
-			}
+			targetDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+				creds.TargetDatabaseUser,
+				creds.TargetDatabasePassword,
+				queue.TargetDatabaseHost,
+				queue.TargetDatabasePort,
+				queue.TargetDatabaseName,
+			)
 
-			targetWriter, err := OpenTarget(params)
+			targetWriter, err := db.OpenTarget(targetDSN)
 			if err != nil {
-				if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to open target: %v", err))); err != nil {
-					logger.Error("failed to write to log", "error", err)
-				}
 				logger.Error("failed to open target", "error", err)
 				continue
 			}
 			defer targetWriter.Close()
 
 			if err := targetWriter.Write(event.EventID, res); err != nil {
-				if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to write to target: %v", err))); err != nil {
-					logger.Error("failed to write to log", "error", err)
-				}
 				logger.Error("failed to write to target", "error", err)
 				continue
 			}
 
 			if err := queueReader.MarkProcessed(event.EventID); err != nil {
-				if err := logWriter.WriteLog([]byte(fmt.Sprintf("failed to mark event as processed: %v", err))); err != nil {
-					logger.Error("failed to write to log", "error", err)
-				}
 				logger.Error("failed to mark event as processed", "eventID", event.EventID, "error", err)
 				continue
 			}

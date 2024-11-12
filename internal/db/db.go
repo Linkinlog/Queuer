@@ -1,8 +1,4 @@
-package internal
-
-type dbParams struct {
-	dsn string
-}
+package db
 
 type QueueEvent struct {
 	EventID   int
@@ -17,8 +13,8 @@ type QueueReader interface {
 	Close() error
 }
 
-func OpenQueue(d *dbParams) (QueueReader, error) {
-	return NewPsqlConnector(d.dsn)
+func OpenQueue(dsn string) (QueueReader, error) {
+	return NewPsqlConnector(dsn)
 }
 
 type TargetWriter interface {
@@ -26,8 +22,8 @@ type TargetWriter interface {
 	Close() error
 }
 
-func OpenTarget(d *dbParams) (TargetWriter, error) {
-	return NewPsqlConnector(d.dsn)
+func OpenTarget(dsn string) (TargetWriter, error) {
+	return NewPsqlConnector(dsn)
 }
 
 type LogWriter interface {
@@ -35,6 +31,6 @@ type LogWriter interface {
 	Close() error
 }
 
-func OpenLog(d *dbParams) (LogWriter, error) {
-	return NewPsqlConnector(d.dsn)
+func OpenLog(dsn string) (LogWriter, error) {
+	return NewPsqlConnector(dsn)
 }

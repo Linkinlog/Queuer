@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 )
 
@@ -17,8 +18,9 @@ type Credentials struct {
 }
 
 type Config struct {
-	Queues []*Queue
-	Creds  *Credentials
+	Queues   []*Queue
+	Creds    *Credentials
+	SlogOpts *slog.HandlerOptions
 }
 
 type Queue struct {
@@ -41,7 +43,7 @@ type Queue struct {
 	LogDatabaseName string `json:"logDatabaseName"`
 }
 
-func ParseConfig(filename string) (*Config, error) {
+func ParseConfig(filename string, verbosity int) (*Config, error) {
 	if _, err := os.Stat(filename); err != nil {
 		return nil, err
 	}
@@ -66,6 +68,25 @@ func ParseConfig(filename string) (*Config, error) {
 		LogDatabaseUser:        logDatabaseUser(),
 		LogDatabasePassword:    logDatabasePassword(),
 	}
+
+	slogOpts := &slog.HandlerOptions{
+		AddSource: false,
+		Level:     slog.LevelWarn,
+	}
+
+	if verbosity > 0 {
+		slogOpts.Level = slog.LevelInfo
+	}
+
+	if verbosity > 1 {
+		slogOpts.Level = slog.LevelDebug
+	}
+
+	if verbosity > 2 {
+		slogOpts.AddSource = true
+	}
+
+	cfg.SlogOpts = slogOpts
 
 	return cfg, nil
 }

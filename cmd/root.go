@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"log/slog"
-	"os"
+	"fmt"
 	"time"
 
 	"github.com/linkinlog/queuer/internal"
+	"github.com/linkinlog/queuer/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,28 +21,15 @@ var RootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		start := time.Now()
 
-		slogOpts := &slog.HandlerOptions{
-			AddSource: false,
-			Level:     slog.LevelWarn,
+		cfg, err := config.ParseConfig(ConfigFilePath, Verbosity)
+		if err != nil {
+			fmt.Println("failed to parse config", "error", err)
+			return
 		}
 
-		if Verbosity > 0 {
-			slogOpts.Level = slog.LevelInfo
-		}
+		internal.Start(cfg)
 
-		if Verbosity > 1 {
-			slogOpts.Level = slog.LevelDebug
-		}
-
-		if Verbosity > 2 {
-			slogOpts.AddSource = true
-		}
-
-		logger := slog.New(slog.NewJSONHandler(os.Stdout, slogOpts))
-
-		internal.Start(logger, ConfigFilePath)
-
-		logger.Info("Finished", "Duration", time.Since(start).String())
+		fmt.Println("Queuer finished in", time.Since(start))
 	},
 }
 

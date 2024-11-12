@@ -1,46 +1,76 @@
 package internal_test
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
-	"os"
 	"testing"
 
 	"github.com/linkinlog/queuer/internal"
+	"github.com/linkinlog/queuer/internal/config"
 )
 
-type testLogger struct {
-	slog.JSONHandler
-}
+func TestStart(t *testing.T) {
+	cfg := &config.Config{
+		Queues: []*config.Queue{
+			{
+				Name:        "Addition Service",
+				Environment: "development",
+				Service:     "adder",
+				Timeout:     1000,
+				Retries:     3,
 
-func (t *testLogger) Handle(ctx context.Context, record slog.Record) error {
-	if record.Level == slog.LevelError {
-		string := record.Message
+				QueueDatabaseHost: "queue",
+				QueueDatabasePort: "5432",
+				QueueDatabaseName: "queue",
 
-		record.Attrs(func(a slog.Attr) bool {
-			if a.Key == "error" {
-				string += fmt.Sprintf(" %v", a.Value)
-				return false
-			}
+				TargetDatabaseHost: "transaction",
+				TargetDatabasePort: "5432",
+				TargetDatabaseName: "target",
 
-			return true
-		})
+				LogDatabaseHost: "logs",
+				LogDatabasePort: "5432",
+				LogDatabaseName: "logs",
+			},
+			{
+				Name:        "Square Service",
+				Environment: "prod",
+				Service:     "squarer",
+				Timeout:     1000,
+				Retries:     3,
 
-		panic(string)
+				QueueDatabaseHost: "queue",
+				QueueDatabasePort: "5432",
+				QueueDatabaseName: "queue",
+
+				TargetDatabaseHost: "transaction",
+				TargetDatabasePort: "5432",
+				TargetDatabaseName: "target",
+
+				LogDatabaseHost: "logs",
+				LogDatabasePort: "5432",
+				LogDatabaseName: "logs",
+			},
+			{
+				Name:        "Long Running Service",
+				Environment: "prod",
+				Service:     "longrunner",
+				Timeout:     1000,
+				Retries:     1,
+
+				QueueDatabaseHost: "queue",
+				QueueDatabasePort: "5432",
+				QueueDatabaseName: "queue",
+
+				TargetDatabaseHost: "transaction",
+				TargetDatabasePort: "5432",
+				TargetDatabaseName: "target",
+
+				LogDatabaseHost: "logs",
+				LogDatabasePort: "5432",
+				LogDatabaseName: "logs",
+			},
+		},
+		SlogOpts: &slog.HandlerOptions{},
 	}
 
-	t.JSONHandler.Handle(ctx, record)
-
-	return nil
-}
-
-func TestStart(t *testing.T) {
-	filePath := "../example.json"
-
-	logger := slog.New(&testLogger{
-		*slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}),
-	})
-
-	internal.Start(logger, filePath)
+	internal.Start(cfg)
 }
