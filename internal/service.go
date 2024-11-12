@@ -18,6 +18,7 @@ import (
 type Service interface {
 	json.Unmarshaler
 	fmt.Stringer
+	SetLogger(*slog.Logger)
 	Run() (results chan []byte, errs chan error)
 }
 
@@ -101,6 +102,8 @@ func processQueue(queue *config.Queue, creds *config.Credentials, s *slog.Handle
 			logger.Error("unknown service", "service", queue.Service)
 			return
 		}
+
+		srv.SetLogger(logger)
 
 		logger.Info("processing queue entry", "queue", queue.Name, "timeout", queue.Timeout, "service", srv.String(), "data", event.Data)
 

@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 )
 
 func NewSquarer() *Squarer {
@@ -12,9 +13,15 @@ func NewSquarer() *Squarer {
 type Squarer struct {
 	Factor int `json:"factor"`
 	Base   int `json:"base"`
+	s      *slog.Logger
+}
+
+func (s *Squarer) SetLogger(sl *slog.Logger) {
+	s.s = sl
 }
 
 func (s *Squarer) UnmarshalJSON(data []byte) error {
+	s.s.Debug("Unmarshalling data", "data", string(data))
 	temp := struct {
 		Factor *int `json:"factor"`
 		Base   *int `json:"base"`
@@ -34,6 +41,7 @@ func (s *Squarer) UnmarshalJSON(data []byte) error {
 	s.Factor = *temp.Factor
 	s.Base = *temp.Base
 
+	s.s.Debug("Unmarshalled data", "factor", s.Factor, "base", s.Base)
 	return nil
 }
 
@@ -47,6 +55,7 @@ func (s *Squarer) Run() (chan []byte, chan error) {
 
 	go func() {
 		res := s.Factor * s.Base
+		s.s.Debug("Squaring", "factor", s.Factor, "base", s.Base, "result", res)
 
 		result, err := json.Marshal(res)
 		if err != nil {
