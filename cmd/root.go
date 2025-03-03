@@ -17,7 +17,7 @@ var (
 var RootCmd = &cobra.Command{
 	Use:     "queuer",
 	Short:   "Queuer is a simple task queue",
-	Example: "queuer -f config.json",
+	Example: "queuer -f example.json",
 	Run: func(cmd *cobra.Command, args []string) {
 		start := time.Now()
 
@@ -35,6 +35,6 @@ var RootCmd = &cobra.Command{
 
 func Execute() error {
 	RootCmd.PersistentFlags().CountVarP(&Verbosity, "verbosity", "v", "Set the verbosity level (e.g., -v for verbose, -vv for very verbose)")
-	RootCmd.PersistentFlags().StringVarP(&ConfigFilePath, "file", "f", "config.json", "Path to the configuration file")
+	RootCmd.PersistentFlags().StringVarP(&ConfigFilePath, "file", "f", "example.json", "Path to the configuration file")
 	return RootCmd.Execute()
 }

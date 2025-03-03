@@ -8,6 +8,7 @@ Every service in Queuer must implement the following interface:
 type Service interface {
     json.Unmarshaler
     fmt.Stringer
+    SetLogger(*slog.Logger)
     Run() (results chan []byte, errs chan error)
 }
 ```
@@ -18,6 +19,7 @@ Each service needs to implement this interface, where:
 
 - `UnmarshalJSON` is used for parsing the incoming task data.
 - `String` returns the name of the service (as a string).
+- `SetLogger` sets the logger for the service.
 - `Run` processes the task, returning channels for both results and errors.
 
 ### Example Service Implementation
@@ -30,6 +32,7 @@ package services
 import (
     "encoding/json"
     "errors"
+    "log/slog"
 )
 
 func NewAdder() *Adder {
@@ -38,9 +41,15 @@ func NewAdder() *Adder {
 
 type Adder struct {
     Addends []int `json:"addends"`
+    s       *slog.Logger
+}
+
+func (a *Adder) SetLogger(s *slog.Logger) {
+    a.s = s
 }
 
 func (a *Adder) UnmarshalJSON(data []byte) error {
+    a.s.Debug("Unmarshalling data", "data", string(data))
     temp := struct {
         Addends []*int `json:"addends"`
     }{}
@@ -55,6 +64,8 @@ func (a *Adder) UnmarshalJSON(data []byte) error {
         }
         a.Addends = append(a.Addends, *addend)
     }
+
+    a.s.Debug("Unmarshalled data", "addends", a.Addends)
 
     return nil
 }
@@ -72,6 +83,8 @@ func (a *Adder) Run() (chan []byte, chan error) {
         for _, addend := range a.Addends {
             sum += addend
         }
+
+        a.s.Debug("Adding", "addends", a.Addends, "result", sum)
 
         result, err := json.Marshal(sum)
         if err != nil {
